@@ -177,10 +177,8 @@ async function handlePhoto(input){
   const file = input.files?.[0];
   if (!file) return;
   
-  // Mostrar estado de análisis
   set({analyzing: true, preview: null});
   
-  // Mostrar preview de la imagen seleccionada
   const reader = new FileReader();
   reader.onload = function(e) {
     S.imgData = e.target.result;
@@ -330,4 +328,93 @@ function render(){
           ${['Calorías:calories','Proteína (g):protein','Grasa (g):fat','Carbos (g):carbs'].map(x=>{const[l,k]=x.split(':');return`<div><label style="font-size:11px;color:var(--sub)">${l}</label><input type="number" value="${p[k]}" oninput="S.preview.${k}=+this.value"></div>`}).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-secondary" style="flex:1" onclick="set({preview:null,imgData
+          <button class="btn btn-secondary" style="flex:1" onclick="set({preview:null,imgData:null})">Cancelar</button>
+          <button class="btn btn-primary" style="flex:2" onclick="confirmMeal(S.preview)">Confirmar ✓</button>
+        </div>
+      </div>`;
+    }
+    if(S.manualMode&&!S.preview){const m=S.manual;
+      h+=`<div class="card" style="margin-top:10px"><div style="margin-bottom:10px"><label style="font-size:12px;color:var(--sub)">Nombre</label>
+        <input type="text" value="${m.name}" placeholder="Ej: Pechuga con arroz" oninput="S.manual.name=this.value"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          ${['Calorías:calories','Proteína (g):protein','Grasa (g):fat','Carbos (g):carbs'].map(x=>{const[l,k]=x.split(':');return`<div><label style="font-size:11px;color:var(--sub)">${l}</label><input type="number" value="${m[k]}" oninput="S.manual.${k}=this.value"></div>`}).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" style="flex:1" onclick="set({manualMode:false})">Cancelar</button>
+          <button class="btn btn-primary" style="flex:2" onclick="confirmMeal({name:S.manual.name,calories:+S.manual.calories||0,protein:+S.manual.protein||0,fat:+S.manual.fat||0,carbs:+S.manual.carbs||0,details:'Manual'})">Guardar ✓</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  // ═══ HISTORY ═══
+  if(S.view==='history'){
+    h+=`<div style="font-size:18px;font-weight:700;margin-bottom:14px">Historial</div>
+      <div style="margin-bottom:10px"><input type="date" value="${date}" onchange="loadDay(this.value)" style="width:100%"></div>
+      <div class="card">${bar(tot.cal,t.target,'var(--acc)','Calorías','kcal')}${bar(tot.prot,t.protG,'var(--prot)','Proteína')}${bar(tot.fat,t.fatG,'var(--fat)','Grasa')}${bar(tot.carb,t.carbG,'var(--carb)','Carbohidratos')}</div>`;
+    if(!meals.length)h+=`<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">Sin registros.</div>`;
+    meals.forEach(m=>{h+=mealCard(m)});
+  }
+
+  // ═══ SETTINGS ═══
+  if(S.view==='settings'){
+    const st=S.stab;
+    h+=`<div style="font-size:18px;font-weight:700;margin-bottom:10px">Configuración</div>
+      <div class="seg">${['body:Cuerpo','energy:Energía','macros:Macros','api:API'].map(x=>{const[v,l]=x.split(':');return`<button class="${st===v?'on':''}" onclick="set({stab:'${v}'})">${l}</button>`}).join('')}</div><div style="margin-top:14px">`;
+
+    if(st==='body')h+=`<div class="card">
+      <div class="field"><label>Peso actual (kg)</label><input type="number" value="${cfg.weight}" step="0.1" oninput="S.cfg.weight=+this.value||0"><div class="hint">Se actualiza al registrar peso diario.</div></div>
+      <div class="field"><label>Altura (cm)</label><input type="number" value="${cfg.height}" oninput="S.cfg.height=+this.value||0"></div>
+      <div class="field"><label>Edad</label><input type="number" value="${cfg.age}" oninput="S.cfg.age=+this.value||0"></div>
+      <div class="field"><label>Sexo</label><div class="seg"><button class="${cfg.sex==='M'?'on':''}" onclick="S.cfg.sex='M';render()">Masculino</button><button class="${cfg.sex==='F'?'on':''}" onclick="S.cfg.sex='F';render()">Femenino</button></div></div></div>`;
+
+    if(st==='energy'){
+      h+=`<div class="card"><div class="field"><label>Método</label><div class="seg"><button class="${cfg.method==='msj'?'on':''}" onclick="S.cfg.method='msj';render()">Mifflin-St Jeor</button><button class="${cfg.method==='simple'?'on':''}" onclick="S.cfg.method='simple';render()">Peso × 30</button></div><div class="hint">${cfg.method==='msj'?'BMR + factor de actividad.':'Estimación rápida.'}</div></div>`;
+      if(cfg.method==='msj')h+=`<div class="field"><label>Actividad</label><div style="display:flex;flex-direction:column;gap:4px">${ACTS.map(a=>`<button onclick="S.cfg.activity='${a.key}';render()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left;border:1px solid ${cfg.activity===a.key?'var(--acc)':'var(--brd)'};background:${cfg.activity===a.key?'var(--acc-lt)':'transparent'};color:var(--text)"><div><div style="font-size:13px;font-weight:${cfg.activity===a.key?700:500}">${a.label}</div><div style="font-size:11px;color:var(--sub)">${a.desc}</div></div><span style="font-size:13px;font-weight:600;color:var(--acc)">×${a.f}</span></button>`).join('')}</div></div>`;
+      h+=`<div class="field"><label>Déficit: ${cfg.deficit}%</label><input type="range" min="5" max="30" step="1" value="${cfg.deficit}" oninput="S.cfg.deficit=+this.value;render()"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub)"><span>5% suave</span><span>15%</span><span>30% agresivo</span></div></div></div>`;
+      h+=`<div class="card" style="background:var(--acc-lt)"><div style="font-size:14px;font-weight:700;margin-bottom:8px">Resumen</div><div style="font-size:13px;line-height:2">${t.bmr!=null?`<div>BMR: <b>${t.bmr} kcal</b></div>`:''}
+        <div>TDEE: <b>${t.maint} kcal/día</b></div><div>Objetivo (−${cfg.deficit}%): <b style="color:var(--acc)">${t.target} kcal/día</b></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">Déficit: ${t.maint-t.target} kcal/día → ~${((t.maint-t.target)*7/7700).toFixed(2)} kg/sem</div></div></div>`;
+    }
+
+    if(st==='macros'){
+      h+=`<div class="card"><div class="field"><label>Base para proteína</label><div class="seg"><button class="${cfg.proteinBase==='current'?'on':''}" onclick="S.cfg.proteinBase='current';render()">Peso actual</button><button class="${cfg.proteinBase==='target'?'on':''}" onclick="S.cfg.proteinBase='target';render()">Peso objetivo</button></div></div>
+        ${cfg.proteinBase==='target'?`<div class="field"><label>Peso objetivo (kg)</label><input type="number" value="${cfg.proteinTarget}" step="0.5" oninput="S.cfg.proteinTarget=+this.value||0;render()"><div class="hint">Evita exceso de proteína sin perder músculo.</div></div>`:''}
+        <div class="field"><label>Proteína: ${cfg.proteinGkg} g/kg</label><input type="range" min="1.2" max="2.5" step="0.1" value="${cfg.proteinGkg}" oninput="S.cfg.proteinGkg=+this.value;render()"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub)"><span>1.2 mín</span><span>1.8 recom.</span><span>2.5</span></div></div>
+        <div class="field"><label>Grasa: ${cfg.fatGkg} g/kg</label><input type="range" min="0.5" max="1.2" step="0.05" value="${cfg.fatGkg}" oninput="S.cfg.fatGkg=+this.value;render()"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub)"><span>0.5</span><span>0.85</span><span>1.2</span></div></div></div>`;
+      h+=`<div class="card" style="background:var(--acc-lt)"><div style="font-size:14px;font-weight:700;margin-bottom:8px">Macros diarios</div><div style="font-size:13px;line-height:2">
+        <div style="color:var(--prot)">Proteína: <b>${t.protG}g</b> (${t.pCal} kcal · ${Math.round(t.pCal/t.target*100)}%) <span style="font-size:11px;color:var(--sub)">— ${cfg.proteinGkg}g × ${cfg.proteinBase==='target'?cfg.proteinTarget:cfg.weight}kg</span></div>
+        <div style="color:var(--fat)">Grasa: <b>${t.fatG}g</b> (${t.fCal} kcal · ${Math.round(t.fCal/t.target*100)}%)</div>
+        <div style="color:var(--carb)">Carbs: <b>${t.carbG}g</b> (${t.cCal} kcal · ${Math.round(t.cCal/t.target*100)}%)</div>
+        <div style="border-top:1px solid var(--brd);margin-top:6px;padding-top:6px;font-size:12px;color:var(--sub)">Total: ${t.pCal+t.fCal+t.cCal} / ${t.target} kcal</div></div></div>`;
+    }
+
+    if(st==='api'){
+      h+=`<div class="card"><div class="field"><label>Gemini API Key (gratis)</label>
+        <input type="text" value="${cfg.apiKey||''}" placeholder="AIza..." style="font-size:14px;font-family:monospace" oninput="S.cfg.apiKey=this.value.trim()">
+        <div class="hint">Modelo: <b>Gemini 2.0 Flash</b> — gratis, sin límite práctico para este uso.<br>
+          Obtené tu key en <b>aistudio.google.com → Get API key</b><br>Se guarda solo en tu teléfono.</div></div></div>
+      <div class="card"><div style="font-size:13px;font-weight:600;margin-bottom:6px">Datos</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:10px">Todo en localStorage. Si borrás datos del sitio, se pierde.</div>
+        <button class="btn btn-secondary" style="width:100%;font-size:13px;padding:10px" onclick="if(confirm('¿Exportar?')){const d={cfg:S.cfg,whist:S.wh,meals:{}};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('ct_meals_'))d.meals[k]=JSON.parse(localStorage.getItem(k))}const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='caltracker-backup.json';a.click()}">📦 Exportar datos (JSON)</button>
+        <button class="btn btn-secondary" style="width:100%;font-size:13px;padding:10px;margin-top:8px" onclick="const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=async(e)=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.cfg){LS.set('cfg',d.cfg);S.cfg={...DEFAULT_CFG,...d.cfg}}if(d.whist){LS.set('whist',d.whist);S.wh=d.whist}if(d.meals)Object.entries(d.meals).forEach(([k,v])=>localStorage.setItem(k,JSON.stringify(v)));alert('Restaurado');render()}catch{alert('Archivo inválido')}};inp.click()">📥 Importar datos</button></div>`;
+    }
+    h+='</div>';
+    h+=`<button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="saveCfg()">Guardar configuración</button>`;
+  }
+
+  h+='</div>';
+  // Nav
+  h+=`<div class="nav">
+    <button class="${S.view==='dashboard'?'active':''}" onclick="loadDay('${TODAY()}');set({view:'dashboard'})"><span class="icon">📊</span>Hoy</button>
+    <button class="${S.view==='weight'?'active':''}" onclick="set({view:'weight'})"><span class="icon">⚖️</span>Peso</button>
+    <div style="flex:1;display:flex;justify-content:center"><button class="fab" onclick="set({view:'add',preview:null,imgData:null,manualMode:false,manual:{name:'',calories:'',protein:'',fat:'',carbs:''},date:'${TODAY()}'})">+</button></div>
+    <button class="${S.view==='history'?'active':''}" onclick="set({view:'history'})"><span class="icon">📅</span>Historial</button>
+    <button class="${S.view==='settings'?'active':''}" onclick="set({view:'settings'})"><span class="icon">⚙️</span>Config</button></div>`;
+
+  document.getElementById('app').innerHTML=h;
+}
+render();
+</script>
+</body>
+</html>
