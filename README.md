@@ -1,10 +1,12 @@
 # CalTracker
 
-Seguimiento de calorías y macros con análisis de fotos por IA (OpenAI GPT-4o-mini).
+Seguimiento de calorías y macros con análisis de fotos por IA.
+
+**100% gratis.** Usa Google Gemini Flash (free tier, sin tarjeta de crédito).
 
 ## Funcionalidades
 
-- **Foto → Calorías**: tomás foto del plato, GPT-4o-mini estima calorías y macros
+- **Foto → Calorías**: tomás foto del plato, Gemini Flash estima calorías y macros
 - **Ingreso manual**: para cuando no tenés foto o querés corregir
 - **Peso diario**: promedio móvil 7 días, velocidad de pérdida real, sparkline
 - **Ajuste adaptativo**: avisa si la pérdida es muy rápida, lenta, o estancada
@@ -16,39 +18,32 @@ Seguimiento de calorías y macros con análisis de fotos por IA (OpenAI GPT-4o-m
 ## Deploy en GitHub Pages
 
 ```bash
-# Opción A: agregar a tu repo existente (ej: inst_tools)
-cp -r caltracker/ tu-repo/caltracker/
-cd tu-repo
-git add caltracker/
-git commit -m "feat: add CalTracker"
-git push
-
-# URL: https://tu-usuario.github.io/tu-repo/caltracker/
-
-# Opción B: repo dedicado
-# Crear repo "caltracker" en GitHub
+# Crear repo "caltracker" en GitHub, subir los 4 archivos, activar Pages
 git init
 git add .
 git commit -m "initial commit"
-git remote add origin https://github.com/tu-usuario/caltracker.git
+git remote add origin https://github.com/TU-USUARIO/caltracker.git
 git push -u origin main
-# Activar GitHub Pages en Settings → Pages → main branch
+# Settings → Pages → main branch → Save
 ```
 
 ## Instalar en iPhone
 
 1. Abrí la URL en **Safari**
-2. Tocá el ícono de **compartir** (cuadrado con flecha)
+2. Tocá el ícono de **compartir** (cuadrado con flecha ↑)
 3. **Agregar a pantalla de inicio**
 4. Se instala como app con ícono propio
 
-## API Key
+## API Key (gratis)
 
-- La app pide tu OpenAI API key en el primer uso
-- Se guarda **localmente** en localStorage de tu teléfono
-- Nunca se envía a ningún servidor excepto `api.openai.com`
-- Modelo: `gpt-4o-mini` → ~$0.003 por foto analizada
-- Obtené tu key en [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+1. Andá a [aistudio.google.com](https://aistudio.google.com)
+2. Iniciá sesión con tu cuenta Google
+3. Hacé clic en **"Get API key"** → **"Create API key"**
+4. Copiá la key (empieza con `AIza...`)
+5. Pegala en la app (Config → API)
+
+**No requiere tarjeta de crédito.** El free tier de Gemini Flash permite ~1,000 requests/día.
+Para 3-5 fotos de comida diarias, es prácticamente ilimitado.
 
 ## Fórmulas
 
@@ -74,4 +69,4 @@ caltracker/
 └── README.md
 ```
 
-Cero dependencias. Cero build. Cero backend.
+Cero dependencias. Cero build. Cero backend. Cero costo.
