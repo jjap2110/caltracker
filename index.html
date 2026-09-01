@@ -177,10 +177,8 @@ async function handlePhoto(input){
   const file = input.files?.[0];
   if (!file) return;
   
-  // Mostrar estado de análisis
   set({analyzing: true, preview: null});
   
-  // Mostrar preview de la imagen seleccionada
   const reader = new FileReader();
   reader.onload = function(e) {
     S.imgData = e.target.result;
@@ -330,4 +328,4 @@ function render(){
           ${['Calorías:calories','Proteína (g):protein','Grasa (g):fat','Carbos (g):carbs'].map(x=>{const[l,k]=x.split(':');return`<div><label style="font-size:11px;color:var(--sub)">${l}</label><input type="number" value="${p[k]}" oninput="S.preview.${k}=+this.value"></div>`}).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-secondary" style="flex:1" onclick="set({preview:null,imgData
+          <button class="btn btn-secondary" style="flex:1" onclick="set({preview:null,imgData:null})
